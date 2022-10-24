@@ -27,17 +27,16 @@ C# helper util to mock objects with random data.
 
 ### Populate an object with random data
     
-    // creating an instance of TestEntity and populate it
     var createdObject = RandomObjectCreator.Create<TestEntity>();
 
 ### Populate an object with random data but skip certain types
 
-    // creating an instance of TestEntity and populate it
     var createdObject = RandomObjectCreator.Create<TestEntity>(null, new List<Type> { typeof(string) });
+    
     // createdObject.stringProp will be null
 
 ### Populate an object with random data but skip certain properties with specific name
     
-    // creating an instance of TestEntity and populate it
     var createdObject = RandomObjectCreator.Create<TestEntity>(new List<string> { "dateTimeProp" });
+    
     // createdObject.dateTimeProp will be null
