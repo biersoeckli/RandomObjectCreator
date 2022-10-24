@@ -35,9 +35,9 @@ namespace ObjectCreator
             typeActionDic.Add(typeof(float), () => property.SetValue(instance, RandomValueCreator.GetRandomFloat()));
             typeActionDic.Add(typeof(double), () => property.SetValue(instance, RandomValueCreator.GetRandomDouble()));
             typeActionDic.Add(typeof(decimal), () => property.SetValue(instance, RandomValueCreator.GetRandomDecimal()));
-            typeActionDic.Add(typeof(DateTime), () => property.SetValue(instance, DateTime.Now)); // todo
-            typeActionDic.Add(typeof(DateOnly), () => property.SetValue(instance, DateOnly.MinValue)); // todo
-            typeActionDic.Add(typeof(TimeOnly), () => property.SetValue(instance, TimeOnly.MinValue)); // todo
+            typeActionDic.Add(typeof(DateTime), () => property.SetValue(instance, RandomValueCreator.GetRandomDateTime()));
+            typeActionDic.Add(typeof(DateOnly), () => property.SetValue(instance, RandomValueCreator.GetRandomDateOnly()));
+            typeActionDic.Add(typeof(TimeOnly), () => property.SetValue(instance, RandomValueCreator.GetRandomTimeOnly()));
 
             if (typeActionDic.Any(typeAction => typeAction.Key == property.PropertyType))
             {

@@ -74,5 +74,22 @@ namespace ObjectCreator
         {
             return (byte)rnd.Next(byte.MinValue, byte.MaxValue);
         }
+
+        public static DateTime GetRandomDateTime()
+        {
+            var start = DateTime.MinValue;
+            var range = (DateTime.Today - start).Days;
+            return start.AddDays(rnd.Next(range)); // todo add random time
+        }
+
+        public static DateOnly GetRandomDateOnly()
+        {
+            return DateOnly.FromDateTime(GetRandomDateTime());
+        }
+
+        public static TimeOnly GetRandomTimeOnly()
+        {
+            return TimeOnly.FromDateTime(GetRandomDateTime());
+        }
     }
 }
