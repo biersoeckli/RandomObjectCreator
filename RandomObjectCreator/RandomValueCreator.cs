@@ -77,9 +77,13 @@ namespace ObjectCreator
 
         public static DateTime GetRandomDateTime()
         {
-            var start = DateTime.MinValue;
-            var range = (DateTime.Today - start).Days;
-            return start.AddDays(rnd.Next(range)); // todo add random time
+            var randomDays = rnd.Next(0, 365);
+            var randomHour = rnd.Next(0, 24);
+            var randomMinute = rnd.Next(0, 59);
+            return DateTime.Now.AddDays((GetRandomBool() ? 1 : -1) * randomDays)
+                .AddHours(randomHour)
+                .AddMinutes(randomMinute)
+                .AddSeconds(randomMinute);
         }
 
         public static DateOnly GetRandomDateOnly()

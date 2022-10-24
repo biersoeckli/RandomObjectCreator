@@ -6,38 +6,51 @@ namespace ObjectCreator
 {
     public static class RandomObjectCreator
     {
-        public static TEntityType Create<TEntityType>()
+
+        public static TEntityType Create<TEntityType>(IList<string> ignoredPropertyNames = null, IList<Type> ignoredPropertyTypes = null)
         {
             // todo checks for TEntityType
             TEntityType instance = (TEntityType)Activator.CreateInstance(typeof(TEntityType));
-            if (instance != null) { PopulateObject(instance); }
+            if (instance != null) { PopulateObject(instance, ignoredPropertyNames, ignoredPropertyTypes); }
             return instance ?? default;
         }
 
-        private static void PopulateObject<TEntityType>(TEntityType instance)
+        private static void PopulateObject<TEntityType>(TEntityType instance, IList<string>? ignoredPropertyNames = null, IList<Type>? ignoredPropertyTypes = null)
         {
-            PropertyInfo[] properties = instance.GetType().GetProperties();
-            foreach (PropertyInfo property in properties)
+            var instanceProperties = instance?.GetType()?.GetProperties() ?? Array.Empty<PropertyInfo>();
+            foreach (PropertyInfo property in instanceProperties)
             {
-                PopulateProperty(instance, property);
+                if (property.MemberType != MemberTypes.Property || !property.CanWrite)
+                {
+                    continue;
+                }
+                var propertyNameIsIgnored = ignoredPropertyNames?.Any(x => x.ToLowerInvariant() == property.Name.ToLowerInvariant()) ?? false;
+                var propertyTypeIsIgnored = ignoredPropertyTypes?.Any(x => x == property.PropertyType) ?? false;
+                if (propertyNameIsIgnored || propertyTypeIsIgnored)
+                {
+                    continue;
+                }
+                PopulateProperty(instance, property, ignoredPropertyNames, ignoredPropertyTypes);
             }
         }
 
-        private static void PopulateProperty<TEntityType>(TEntityType instance, PropertyInfo property)
+        private static void PopulateProperty<TEntityType>(TEntityType instance, PropertyInfo property,
+            IList<string>? ignoredPropertyNames = null, IList<Type>? ignoredPropertyTypes = null)
         {
-            var typeActionDic = new Dictionary<Type, Action>();
-
-            typeActionDic.Add(typeof(string), () => property.SetValue(instance, RandomValueCreator.GetRandomString()));
-            typeActionDic.Add(typeof(bool), () => property.SetValue(instance, RandomValueCreator.GetRandomBool()));
-            typeActionDic.Add(typeof(byte), () => property.SetValue(instance, RandomValueCreator.GetRandomByte()));
-            typeActionDic.Add(typeof(short), () => property.SetValue(instance, RandomValueCreator.GetRandomShort()));
-            typeActionDic.Add(typeof(int), () => property.SetValue(instance, RandomValueCreator.GetRandomInt()));
-            typeActionDic.Add(typeof(float), () => property.SetValue(instance, RandomValueCreator.GetRandomFloat()));
-            typeActionDic.Add(typeof(double), () => property.SetValue(instance, RandomValueCreator.GetRandomDouble()));
-            typeActionDic.Add(typeof(decimal), () => property.SetValue(instance, RandomValueCreator.GetRandomDecimal()));
-            typeActionDic.Add(typeof(DateTime), () => property.SetValue(instance, RandomValueCreator.GetRandomDateTime()));
-            typeActionDic.Add(typeof(DateOnly), () => property.SetValue(instance, RandomValueCreator.GetRandomDateOnly()));
-            typeActionDic.Add(typeof(TimeOnly), () => property.SetValue(instance, RandomValueCreator.GetRandomTimeOnly()));
+            var typeActionDic = new Dictionary<Type, Action>
+            {
+                { typeof(string), () => property.SetValue(instance, RandomValueCreator.GetRandomString()) },
+                { typeof(bool), () => property.SetValue(instance, RandomValueCreator.GetRandomBool()) },
+                { typeof(byte), () => property.SetValue(instance, RandomValueCreator.GetRandomByte()) },
+                { typeof(short), () => property.SetValue(instance, RandomValueCreator.GetRandomShort()) },
+                { typeof(int), () => property.SetValue(instance, RandomValueCreator.GetRandomInt()) },
+                { typeof(float), () => property.SetValue(instance, RandomValueCreator.GetRandomFloat()) },
+                { typeof(double), () => property.SetValue(instance, RandomValueCreator.GetRandomDouble()) },
+                { typeof(decimal), () => property.SetValue(instance, RandomValueCreator.GetRandomDecimal()) },
+                { typeof(DateTime), () => property.SetValue(instance, RandomValueCreator.GetRandomDateTime()) },
+                { typeof(DateOnly), () => property.SetValue(instance, RandomValueCreator.GetRandomDateOnly()) },
+                { typeof(TimeOnly), () => property.SetValue(instance, RandomValueCreator.GetRandomTimeOnly()) }
+            };
 
             if (typeActionDic.Any(typeAction => typeAction.Key == property.PropertyType))
             {
@@ -45,7 +58,7 @@ namespace ObjectCreator
                 return;
             }
 
-            if (IsGenericList(property.PropertyType))
+            if (ListUtils.IsGenericList(property.PropertyType))
             {
                 PopulateGenericList(instance, property);
                 return;
@@ -53,11 +66,11 @@ namespace ObjectCreator
 
             // todo add dictionary support 
 
-            if (!property.PropertyType.IsPrimitive && !IsGenericList(property.PropertyType))
+            if (!property.PropertyType.IsPrimitive && !ListUtils.IsGenericList(property.PropertyType))
             {
                 var properyInstance = Activator.CreateInstance(property.PropertyType);
                 property.SetValue(instance, properyInstance);
-                PopulateObject(properyInstance);
+                PopulateObject(properyInstance, ignoredPropertyNames, ignoredPropertyTypes);
             }
         }
 
@@ -83,20 +96,6 @@ namespace ObjectCreator
 
             property.SetValue(instance, constructedListInstance);
             PopulateObject(listElementInstance);
-        }
-
-        // todo move to util class
-        public static bool IsGenericList(Type oType)
-        {
-            if (oType is null)
-            {
-                return false;
-            }
-            if (oType.IsGenericType)
-            {
-                return new List<Type> { typeof(List<>), typeof(ICollection<>), typeof(IEnumerable<>) }.Any(type => oType.GetGenericTypeDefinition() == type);
-            }
-            return false;
         }
     }
 }
